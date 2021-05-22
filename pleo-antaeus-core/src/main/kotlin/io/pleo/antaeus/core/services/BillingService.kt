@@ -33,15 +33,18 @@ class BillingService(
         val currentDateTime = LocalDateTime.now()
         val temporalAdjuster = TemporalAdjusters.lastDayOfMonth()
         var lastDayOfMonth = currentDateTime.with(temporalAdjuster)
+        // handle the case where we call this method late in the current month
+        // e.g: call at 20th of june, we want the billing to start at 1st August instead of 1st July
         if (lastDayOfMonth.dayOfMonth - currentDateTime.dayOfMonth < billingConfig.minDaysToBillInvoice) {
             lastDayOfMonth = lastDayOfMonth.plusMonths(1)
         }
 
-        return lastDayOfMonth.toLocalDate()
+        val firstDayOfNextMonth = lastDayOfMonth.plusDays(1)
+        return firstDayOfNextMonth.toLocalDate()
     }
 
     private fun processUnpaidInvoices() {
-        billingProcessor.startNewBilling()
+        billingProcessor.startNewBillingOperation()
     }
 
     private fun executeBilling(){

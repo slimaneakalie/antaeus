@@ -62,7 +62,7 @@ fun main() {
     val customerService = CustomerService(dal = dal)
 
     // This is _your_ billing service to be included where you see fit
-    val billingConfig = BillingConfig(minDaysToBillInvoice = 15, workerPoolSize = 100)
+    val billingConfig = BillingConfig(minDaysToBillInvoice = 15, workerPoolSize = 100, maxNumberOfPaymentRetries = 4)
     val billingService = BillingService(paymentProvider = paymentProvider, billingConfig = billingConfig, dal = dal)
 
     // Create REST web service

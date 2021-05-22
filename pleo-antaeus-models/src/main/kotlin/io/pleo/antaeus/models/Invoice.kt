@@ -5,5 +5,6 @@ data class Invoice(
     val customerId: Int,
     val amount: Money,
     val status: InvoiceStatus,
-    val month: Int
+    val month: Int,
+    val year: Int
 )

@@ -46,16 +46,17 @@ class AntaeusDal(private val db: Database) {
         }
     }
 
-    fun createInvoice(amount: Money, customer: Customer, status: InvoiceStatus = InvoiceStatus.PENDING, month: Int): Invoice? {
+    fun createInvoice(invoice: Invoice): Invoice? {
         val id = transaction(db) {
             // Insert the invoice and returns its new id.
             InvoiceTable
                 .insert {
-                    it[this.value] = amount.value
-                    it[this.currency] = amount.currency.toString()
+                    it[this.value] = invoice.amount.value
+                    it[this.currency] = invoice.amount.currency.toString()
                     it[this.status] = status.toString()
-                    it[this.customerId] = customer.id
-                    it[this.month] = month
+                    it[this.customerId] = invoice.customerId
+                    it[this.month] = invoice.month
+                    it[this.year] = invoice.year
                 } get InvoiceTable.id
         }
 

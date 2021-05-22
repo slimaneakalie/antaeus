@@ -20,18 +20,23 @@ internal fun setupInitialData(dal: AntaeusDal) {
     }
 
     val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
+    val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+
 
     customers.forEach { customer ->
         (1..10).forEach {
-            dal.createInvoice(
+            val invoice = Invoice(
+                id = 0,
                 amount = Money(
-                    value = BigDecimal(Random.nextDouble(10.0, 500.0)),
-                    currency = customer.currency
+                        value = BigDecimal(Random.nextDouble(10.0, 500.0)),
+                        currency = customer.currency
                 ),
-                customer = customer,
+                customerId = customer.id,
                 status = if (it == 1) InvoiceStatus.PENDING else InvoiceStatus.PAID,
-                month = if (it == 1) currentMonth else Random.nextInt(1, 12)
+                month = if (it == 1) currentMonth else Random.nextInt(1, 12),
+                year = if (it == 1) currentYear else Random.nextInt(2000, currentYear)
             )
+            dal.createInvoice(invoice)
         }
     }
 }

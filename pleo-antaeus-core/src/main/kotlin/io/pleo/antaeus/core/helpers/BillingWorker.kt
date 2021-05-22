@@ -1,6 +1,7 @@
 package io.pleo.antaeus.core.helpers
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 fun CoroutineScope.billingWorker(
@@ -12,7 +13,7 @@ fun CoroutineScope.billingWorker(
                     invoiceToProcess = invoice,
                     paymentProvider = workerInput.paymentProvider,
                     maxNumberOfPaymentRetries = workerInput.maxNumberOfPaymentRetries,
-                    dal = workerInput.dal
+                    paymentRetryDelayMs = workerInput.paymentRetryDelayMs
             )
 
             processInvoicePayment(paymentProcessingInput)
@@ -21,8 +22,9 @@ fun CoroutineScope.billingWorker(
 }
 
 
-fun processInvoicePayment(
-        paymentProcessingInput: PaymentProcessingInput
+suspend fun processInvoicePayment(
+    paymentProcessingInput: PaymentProcessingInput
 ): Boolean{
+    delay(1000)
     return true
 }

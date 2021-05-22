@@ -14,6 +14,7 @@ object InvoiceTable : Table() {
     val customerId = reference("customer_id", CustomerTable.id)
     val status = text("status")
     val month = integer("month")
+    val year = integer("year")
 }
 
 object CustomerTable : Table() {

@@ -20,7 +20,8 @@ fun ResultRow.toInvoice(): Invoice = Invoice(
     ),
     status = InvoiceStatus.valueOf(this[InvoiceTable.status]),
     customerId = this[InvoiceTable.customerId],
-    month =  this[InvoiceTable.month]
+    month =  this[InvoiceTable.month],
+    year =  this[InvoiceTable.year]
 )
 
 fun ResultRow.toCustomer(): Customer = Customer(
