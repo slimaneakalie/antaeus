@@ -9,6 +9,6 @@ data class BillingWorkerInput(
         val unpaidInvoicesChannel: ReceiveChannel<Invoice>,
         val paymentProvider: PaymentProvider,
         val maxNumberOfPaymentRetries: Int,
-        val paymentRetryDelayMs: Int,
+        val paymentRetryDelayMs: Long,
         val dal: AntaeusDal
 )

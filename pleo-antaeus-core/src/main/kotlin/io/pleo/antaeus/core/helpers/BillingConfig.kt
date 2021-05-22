@@ -4,5 +4,5 @@ data class BillingConfig (
     val minDaysToBillInvoice: Int,
     val workerPoolSize: Int,
     val maxNumberOfPaymentRetries: Int,
-    val paymentRetryDelayMs: Int
+    val paymentRetryDelayMs: Long
 )

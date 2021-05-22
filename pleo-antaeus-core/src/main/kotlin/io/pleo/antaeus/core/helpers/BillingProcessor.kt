@@ -60,7 +60,7 @@ class BillingProcessor(
             if (invoice.month != currentMonth) {
                 return
             }
-            
+
             var month = if (invoice.month == 12) 1 else invoice.month+1
             var year = if (invoice.month == 12) invoice.year+1 else invoice.year
             val nextMonthInvoice = invoice.copy(status = InvoiceStatus.PENDING, month = month, year = year)

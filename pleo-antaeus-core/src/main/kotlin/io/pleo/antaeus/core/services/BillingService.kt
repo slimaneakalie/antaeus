@@ -25,10 +25,6 @@ class BillingService(
             paymentProvider = paymentProvider
     )
 
-    init {
-        scheduleNextBilling()
-    }
-
     private fun getNextBillingDate(): LocalDate {
         val currentDateTime = LocalDateTime.now()
         val temporalAdjuster = TemporalAdjusters.lastDayOfMonth()
@@ -52,7 +48,7 @@ class BillingService(
         scheduleNextBilling()
     }
 
-    private fun scheduleNextBilling() {
+    fun scheduleNextBilling() {
         val nextBillingDate = getNextBillingDate()
         timer.schedule(timerTask {
             executeBilling()
