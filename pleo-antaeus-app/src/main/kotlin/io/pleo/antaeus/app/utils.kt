@@ -6,6 +6,9 @@ import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
 import java.math.BigDecimal
+import java.time.Month
+import java.time.Year
+import java.util.*
 import kotlin.random.Random
 
 // This will create all schemas and setup initial data
@@ -16,6 +19,8 @@ internal fun setupInitialData(dal: AntaeusDal) {
         )
     }
 
+    val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
+
     customers.forEach { customer ->
         (1..10).forEach {
             dal.createInvoice(
@@ -24,7 +29,8 @@ internal fun setupInitialData(dal: AntaeusDal) {
                     currency = customer.currency
                 ),
                 customer = customer,
-                status = if (it == 1) InvoiceStatus.PENDING else InvoiceStatus.PAID
+                status = if (it == 1) InvoiceStatus.PENDING else InvoiceStatus.PAID,
+                month = if (it == 1) currentMonth else Random.nextInt(1, 12)
             )
         }
     }

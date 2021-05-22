@@ -30,6 +30,14 @@ class AntaeusDal(private val db: Database) {
         }
     }
 
+    fun fetchUnpaidInvoices(): List<Invoice> {
+        return transaction(db) {
+            InvoiceTable
+                    .select { InvoiceTable.status.eq(InvoiceStatus.PENDING.toString()) }
+                    .map { it.toInvoice() }
+        }
+    }
+
     fun fetchInvoices(): List<Invoice> {
         return transaction(db) {
             InvoiceTable
@@ -38,7 +46,7 @@ class AntaeusDal(private val db: Database) {
         }
     }
 
-    fun createInvoice(amount: Money, customer: Customer, status: InvoiceStatus = InvoiceStatus.PENDING): Invoice? {
+    fun createInvoice(amount: Money, customer: Customer, status: InvoiceStatus = InvoiceStatus.PENDING, month: Int): Invoice? {
         val id = transaction(db) {
             // Insert the invoice and returns its new id.
             InvoiceTable
@@ -47,6 +55,7 @@ class AntaeusDal(private val db: Database) {
                     it[this.currency] = amount.currency.toString()
                     it[this.status] = status.toString()
                     it[this.customerId] = customer.id
+                    it[this.month] = month
                 } get InvoiceTable.id
         }
 
