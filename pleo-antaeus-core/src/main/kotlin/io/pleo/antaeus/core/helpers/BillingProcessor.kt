@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import java.util.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.min
 
@@ -54,7 +55,12 @@ class BillingProcessor(
     }
 
     private fun addNextMonthInvoices(currentUnpaidInvoices: List<Invoice>, dal: AntaeusDal){
+        val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
         currentUnpaidInvoices.forEach{ invoice ->
+            if (invoice.month != currentMonth) {
+                return
+            }
+            
             var month = if (invoice.month == 12) 1 else invoice.month+1
             var year = if (invoice.month == 12) invoice.year+1 else invoice.year
             val nextMonthInvoice = invoice.copy(status = InvoiceStatus.PENDING, month = month, year = year)
