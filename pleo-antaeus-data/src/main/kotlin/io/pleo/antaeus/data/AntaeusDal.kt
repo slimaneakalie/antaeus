@@ -50,7 +50,7 @@ class AntaeusDal(private val db: Database) {
                 .insert {
                     it[this.value] = invoice.amount.value
                     it[this.currency] = invoice.amount.currency.toString()
-                    it[this.status] = status.toString()
+                    it[this.status] = invoice.status.toString()
                     it[this.customerId] = invoice.customerId
                     it[this.month] = invoice.month
                     it[this.year] = invoice.year
