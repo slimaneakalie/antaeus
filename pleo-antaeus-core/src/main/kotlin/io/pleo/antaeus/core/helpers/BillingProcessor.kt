@@ -56,7 +56,7 @@ class BillingProcessor(
                     dal = billingConfig.dal
             )
 
-            billingWorker(workerInput)
+            BillingWorker(workerInput).start()
         }
     }
 

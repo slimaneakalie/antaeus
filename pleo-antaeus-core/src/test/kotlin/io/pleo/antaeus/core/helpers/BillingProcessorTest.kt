@@ -6,7 +6,10 @@ import io.pleo.antaeus.models.Currency
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -44,37 +47,56 @@ class BillingProcessorTest {
             }
         }
 
-        with(mockk<BillingProcessor>()) {
-            val workerInputSlot = slot<BillingWorkerInput>()
-            coEvery{
-                billingWorker(workerInput = capture(workerInputSlot))
-            } answers {
-                runBlocking{
-                    createdBillingWorkers++
-                    println("createdBillingWorkers: $createdBillingWorkers")
-                    for (invoice in workerInputSlot.captured.unpaidInvoicesChannel){
-                        invoicesToProcess.add(invoice)
-                        println("invoice to process: $invoice")
-                    }
-                }
-            }
 
-            val billingConfig = BillingConfig(
-                    paymentProvider = mockk(),
-                    dal = dalMock,
-                    minDaysToBillInvoice = 15,
-                    workerPoolSize = thisMonthUnpaidInvoices.size * 3,
-                    maxNumberOfPaymentRetries = 3,
-                    paymentRetryDelayMs = 1000
-            )
+//        val workerInputSlot = slot<BillingWorkerInput>()
+//        coEvery {
+//            billingWorker(workerInput = capture(workerInputSlot))
+//        } answers {
+//            println("createdBillingWorkers: $createdBillingWorkers")
+//            createdBillingWorkers++
+//            runBlocking{
+//                createdBillingWorkers++
+//                println("createdBillingWorkers: $createdBillingWorkers")
+//                for (invoice in workerInputSlot.captured.unpaidInvoicesChannel){
+//                    invoicesToProcess.add(invoice)
+//                    println("invoice to process: $invoice")
+//                }
+//            }
+//        }
 
-            val billingProcessor = BillingProcessor(billingConfig = billingConfig)
-            runBlocking {
-                billingProcessor.startNewBillingOperation()
-            }
+//        val workerInputSlot = slot<BillingWorkerInput>()
+//        val billingWorkerMock = mockk<BillingWorker> {
+//            every { start() } answers {
+//                createdBillingWorkers++
+//                println("createdBillingWorkers: $createdBillingWorkers")
+//            }
+//        }
 
+        mockkConstructor(BillingWorker::class)
+
+        every {
+            anyConstructed<BillingWorker>().start()
+        } answers {
+            createdBillingWorkers++
             println("createdBillingWorkers: $createdBillingWorkers")
         }
+
+
+        val billingConfig = BillingConfig(
+                paymentProvider = mockk(),
+                dal = dalMock,
+                minDaysToBillInvoice = 15,
+                workerPoolSize = thisMonthUnpaidInvoices.size * 3,
+                maxNumberOfPaymentRetries = 3,
+                paymentRetryDelayMs = 1000
+        )
+
+        val billingProcessor = BillingProcessor(billingConfig = billingConfig)
+        runBlocking {
+            billingProcessor.startNewBillingOperation()
+        }
+
+        println("2- createdBillingWorkers: $createdBillingWorkers")
     }
 
     private fun buildUnpaidInvoiceList(): List<Invoice>{

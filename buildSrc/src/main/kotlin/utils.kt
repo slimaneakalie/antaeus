@@ -18,7 +18,7 @@ fun Project.kotlinProject() {
         "implementation"("io.github.microutils:kotlin-logging:1.7.8")
 
         // Mockk
-        "testImplementation"("io.mockk:mockk:1.9.3")
+        "testImplementation"("io.mockk:mockk:1.11.0")
 
         // JUnit 5
         "testImplementation"("org.junit.jupiter:junit-jupiter-api:$junitVersion")
