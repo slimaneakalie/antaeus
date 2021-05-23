@@ -39,8 +39,12 @@ class BillingServiceTest {
 
         billingService.startBillingScheduler()
 
-        while (i < 3);
+        Assertions.assertEquals(true, billingService.schedulerIsActive())
+        // Wait for the the service fo finish
+        while (billingService.schedulerIsActive());
+
         verify(atLeast = 3) { billingProcessor.startNewBillingOperation() }
+        Assertions.assertEquals(false, billingService.schedulerIsActive())
     }
 
     private fun nextBillingDateFuncFactory(): () -> Date {

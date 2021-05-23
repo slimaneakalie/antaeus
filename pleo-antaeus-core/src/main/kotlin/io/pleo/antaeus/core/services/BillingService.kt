@@ -26,6 +26,10 @@ class BillingService(
         }
     }
 
+    fun schedulerIsActive() : Boolean {
+        return isActive
+    }
+
     fun stopBillingScheduler(){
         isActive = false
         timer.cancel()
