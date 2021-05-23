@@ -14,8 +14,6 @@ import kotlin.math.min
 
 class BillingProcessor(
         private val billingConfig: BillingConfig,
-        private val dal: AntaeusDal,
-        private val paymentProvider: PaymentProvider
 ) : CoroutineScope{
     private val unpaidInvoicesChannel = Channel<Invoice>()
     private val job = Job()
@@ -24,12 +22,12 @@ class BillingProcessor(
         get() = job
 
     fun startNewBillingOperation(){
-        val unpaidInvoices = dal.fetchUnpaidInvoices()
+        val unpaidInvoices = billingConfig.dal.fetchUnpaidInvoices()
         var numberOfWorkers = min(unpaidInvoices.size, billingConfig.workerPoolSize)
 
         launchBillingWorkers(numberOfWorkers)
         sendUnpaidInvoicesToChannel(unpaidInvoices)
-        addNextMonthInvoices(currentUnpaidInvoices = unpaidInvoices, dal = dal)
+        addNextMonthInvoices(currentUnpaidInvoices = unpaidInvoices, dal = billingConfig.dal)
     }
 
     private fun sendUnpaidInvoicesToChannel(unpaidInvoices: List<Invoice>){
@@ -44,10 +42,10 @@ class BillingProcessor(
         repeat(numberOfWorkers){
             val workerInput = BillingWorkerInput(
                     unpaidInvoicesChannel = unpaidInvoicesChannel,
-                    paymentProvider = paymentProvider,
+                    paymentProvider = billingConfig.paymentProvider,
                     maxNumberOfPaymentRetries = billingConfig.maxNumberOfPaymentRetries,
                     paymentRetryDelayMs = billingConfig.paymentRetryDelayMs,
-                    dal = dal
+                    dal = billingConfig.dal
             )
 
             billingWorker(workerInput)

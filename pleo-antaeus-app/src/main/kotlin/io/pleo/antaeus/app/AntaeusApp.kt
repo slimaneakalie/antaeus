@@ -8,6 +8,7 @@
 package io.pleo.antaeus.app
 
 import getPaymentProvider
+import getNextBillingDate
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
 import io.pleo.antaeus.core.services.InvoiceService
@@ -27,49 +28,59 @@ import java.io.File
 import java.sql.Connection
 
 fun main() {
+    var db = initDb()
+
+    // dal: data access layer.
+    val dal = AntaeusDal(db = db)
+    setupInitialData(dal = dal)
+
+    val invoiceService = InvoiceService(dal = dal)
+    val customerService = CustomerService(dal = dal)
+    val billingService = createBillingService(dal = dal)
+    billingService.scheduleNextBilling()
+
+    AntaeusRest(
+        invoiceService = invoiceService,
+        customerService = customerService
+    ).run()
+}
+
+fun initDb(): Database{
     // The tables to create in the database.
     val tables = arrayOf(InvoiceTable, CustomerTable)
 
     val dbFile: File = File.createTempFile("antaeus-db", ".sqlite")
     // Connect to the database and create the needed tables. Drop any existing data.
     val db = Database
-        .connect(url = "jdbc:sqlite:${dbFile.absolutePath}",
-            driver = "org.sqlite.JDBC",
-            user = "root",
-            password = "")
-        .also {
-            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-            transaction(it) {
-                addLogger(StdOutSqlLogger)
-                // Drop all existing tables to ensure a clean slate on each run
-                SchemaUtils.drop(*tables)
-                // Create all tables
-                SchemaUtils.create(*tables)
+            .connect(url = "jdbc:sqlite:${dbFile.absolutePath}",
+                    driver = "org.sqlite.JDBC",
+                    user = "root",
+                    password = "")
+            .also {
+                TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+                transaction(it) {
+                    addLogger(StdOutSqlLogger)
+                    // Drop all existing tables to ensure a clean slate on each run
+                    SchemaUtils.drop(*tables)
+                    // Create all tables
+                    SchemaUtils.create(*tables)
+                }
             }
-        }
+    return db
+}
 
-    // Set up data access layer.
-    val dal = AntaeusDal(db = db)
-
-    // Insert example data in the database.
-    setupInitialData(dal = dal)
-
-    // Get third parties
+fun createBillingService(dal: AntaeusDal): BillingService {
     val paymentProvider = getPaymentProvider()
+    val billingConfig = BillingConfig(
+            paymentProvider = paymentProvider,
+            dal = dal,
+            minDaysToBillInvoice = 15,
+            workerPoolSize = 100,
+            maxNumberOfPaymentRetries = 4,
+            paymentRetryDelayMs = 10000
+    )
 
-    // Create core services
-    val invoiceService = InvoiceService(dal = dal)
-    val customerService = CustomerService(dal = dal)
-
-    // This is _your_ billing service to be included where you see fit
-    val billingConfig = BillingConfig(minDaysToBillInvoice = 15, workerPoolSize = 100, maxNumberOfPaymentRetries = 4, paymentRetryDelayMs = 10000)
-    val billingService = BillingService(paymentProvider = paymentProvider, billingConfig = billingConfig, dal = dal)
-
-    billingService.scheduleNextBilling()
-
-    // Create REST web service
-    AntaeusRest(
-        invoiceService = invoiceService,
-        customerService = customerService
-    ).run()
+    return BillingService(
+            billingConfig = billingConfig,
+            getNextBillingDate = { getNextBillingDate(billingConfig.minDaysToBillInvoice) })
 }
