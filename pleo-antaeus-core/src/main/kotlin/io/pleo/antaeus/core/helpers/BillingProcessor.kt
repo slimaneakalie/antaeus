@@ -34,6 +34,10 @@ class BillingProcessor(
         addNextMonthInvoices(currentUnpaidInvoices = unpaidInvoices, dal = billingConfig.dal)
     }
 
+    fun close() {
+        job.cancel()
+    }
+
     private fun sendUnpaidInvoicesToChannel(unpaidInvoices: List<Invoice>){
         launch {
             unpaidInvoices.forEach{ invoice ->
@@ -68,9 +72,5 @@ class BillingProcessor(
             val nextMonthInvoice = invoice.copy(status = InvoiceStatus.PENDING, month = month, year = year)
             dal.createInvoice(nextMonthInvoice)
         }
-    }
-
-    fun close() {
-        job.cancel()
     }
 }
