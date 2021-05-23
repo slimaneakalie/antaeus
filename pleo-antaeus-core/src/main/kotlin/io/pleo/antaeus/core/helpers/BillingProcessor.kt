@@ -1,6 +1,5 @@
 package io.pleo.antaeus.core.helpers
 
-import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
@@ -23,6 +22,7 @@ class BillingProcessor(
 
     fun startNewBillingOperation(){
         val unpaidInvoices = billingConfig.dal.fetchUnpaidInvoices()
+        // if we have 100 unpaid invoices and 500 in the size of workers pool, we should start just 100 workers
         var numberOfWorkers = min(unpaidInvoices.size, billingConfig.workerPoolSize)
 
         launchBillingWorkers(numberOfWorkers)

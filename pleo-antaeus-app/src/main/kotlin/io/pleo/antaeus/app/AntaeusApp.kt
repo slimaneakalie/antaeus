@@ -16,6 +16,7 @@ import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.data.CustomerTable
 import io.pleo.antaeus.data.InvoiceTable
 import io.pleo.antaeus.core.helpers.BillingConfig
+import io.pleo.antaeus.core.helpers.BillingProcessor
 import io.pleo.antaeus.rest.AntaeusRest
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -37,7 +38,7 @@ fun main() {
     val invoiceService = InvoiceService(dal = dal)
     val customerService = CustomerService(dal = dal)
     val billingService = createBillingService(dal = dal)
-    billingService.scheduleNextBilling()
+    billingService.startBillingScheduler()
 
     AntaeusRest(
         invoiceService = invoiceService,
@@ -80,7 +81,10 @@ fun createBillingService(dal: AntaeusDal): BillingService {
             paymentRetryDelayMs = 10000
     )
 
+    val billingProcessor = BillingProcessor(billingConfig = billingConfig)
+
     return BillingService(
-            billingConfig = billingConfig,
-            getNextBillingDate = { getNextBillingDate(billingConfig.minDaysToBillInvoice) })
+        billingProcessor = billingProcessor,
+        getNextBillingDate = { getNextBillingDate(billingConfig.minDaysToBillInvoice) },
+    )
 }

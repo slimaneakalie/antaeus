@@ -1,16 +1,13 @@
 
 import io.pleo.antaeus.core.external.PaymentProvider
-import io.pleo.antaeus.core.helpers.BillingConfig
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Currency
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.sql.Date
 import java.time.LocalDateTime
-import java.time.Month
-import java.time.Year
 import java.time.temporal.TemporalAdjusters
 import java.util.*
 import kotlin.random.Random
@@ -54,10 +51,11 @@ internal fun getPaymentProvider(): PaymentProvider {
     }
 }
 
-internal fun getNextBillingDate(minDaysToBillInvoice: Int): LocalDate {
+internal fun getNextBillingDate(minDaysToBillInvoice: Int): Date {
     val currentDateTime = LocalDateTime.now()
     val temporalAdjuster = TemporalAdjusters.lastDayOfMonth()
     var lastDayOfMonth = currentDateTime.with(temporalAdjuster)
+
     // handle the case where we call this method late in the current month
     // e.g: call at 20th of june, we want the billing to start at 1st August instead of 1st July
     if (lastDayOfMonth.dayOfMonth - currentDateTime.dayOfMonth < minDaysToBillInvoice) {
@@ -65,5 +63,6 @@ internal fun getNextBillingDate(minDaysToBillInvoice: Int): LocalDate {
     }
 
     val firstDayOfNextMonth = lastDayOfMonth.plusDays(1)
-    return firstDayOfNextMonth.toLocalDate()
+    val firstDayOfNextMonthLocalDate = firstDayOfNextMonth.toLocalDate()
+    return Date.valueOf(firstDayOfNextMonthLocalDate)
 }
