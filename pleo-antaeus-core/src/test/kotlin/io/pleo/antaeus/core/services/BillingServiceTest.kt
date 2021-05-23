@@ -20,8 +20,8 @@ import kotlin.random.Random
 
 class BillingServiceTest {
     @Test
-    fun `schedule calls to the billing processor`(){
-        mockkStatic(BillingProcessor::class)
+    fun `schedule calls to the billing processor and stop the processor on demand`(){
+        // Create the billing service
         val billingProcessor = mockkClass(BillingProcessor::class)
 
         val billingService = BillingService(
@@ -29,6 +29,7 @@ class BillingServiceTest {
                 getNextBillingDate = nextBillingDateFuncFactory()
         )
 
+        // Mock the billing processor functions
         var i = 0
         every { billingProcessor.startNewBillingOperation() } answers {
             i++
@@ -37,14 +38,20 @@ class BillingServiceTest {
             }
         }
 
+        every { billingProcessor.close() } just Runs
+
+        // start the billing scheduler
         billingService.startBillingScheduler()
 
+        // Check if the billing scheduler if currently active
         Assertions.assertEquals(true, billingService.schedulerIsActive())
+
         // Wait for the the service fo finish
         while (billingService.schedulerIsActive());
 
+        // Check for processor calls
         verify(atLeast = 3) { billingProcessor.startNewBillingOperation() }
-        Assertions.assertEquals(false, billingService.schedulerIsActive())
+        verify(exactly = 1) { billingProcessor.close() }
     }
 
     private fun nextBillingDateFuncFactory(): () -> Date {

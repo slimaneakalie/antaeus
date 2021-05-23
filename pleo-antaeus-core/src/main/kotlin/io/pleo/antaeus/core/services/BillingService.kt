@@ -32,6 +32,7 @@ class BillingService(
 
     fun stopBillingScheduler(){
         isActive = false
+        billingProcessor.close()
         timer.cancel()
     }
 

@@ -15,12 +15,16 @@ class BillingProcessor(
         private val billingConfig: BillingConfig,
 ) : CoroutineScope{
     private val unpaidInvoicesChannel = Channel<Invoice>()
-    private val job = Job()
+    private var job = Job()
 
     override val coroutineContext: CoroutineContext
         get() = job
 
     fun startNewBillingOperation(){
+        if (job.isCancelled){
+            job = Job()
+        }
+
         val unpaidInvoices = billingConfig.dal.fetchUnpaidInvoices()
         // if we have 100 unpaid invoices and 500 in the size of workers pool, we should start just 100 workers
         var numberOfWorkers = min(unpaidInvoices.size, billingConfig.workerPoolSize)
@@ -64,5 +68,9 @@ class BillingProcessor(
             val nextMonthInvoice = invoice.copy(status = InvoiceStatus.PENDING, month = month, year = year)
             dal.createInvoice(nextMonthInvoice)
         }
+    }
+
+    fun close() {
+        job.cancel()
     }
 }
