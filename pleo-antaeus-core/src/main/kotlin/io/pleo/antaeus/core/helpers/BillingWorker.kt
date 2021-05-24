@@ -4,15 +4,13 @@ import io.pleo.antaeus.models.InvoiceStatus
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
-class BillingWorker (
-        private val workerInput: BillingWorkerInput
-) : CoroutineScope{
+class BillingWorker () : CoroutineScope{
     private var job = Job()
 
     override val coroutineContext: CoroutineContext
         get() = job
 
-    fun start(){
+    fun start(workerInput: BillingWorkerInput){
         launch{
             println("from original worker, workerInput: $workerInput")
             for (invoice in workerInput.unpaidInvoicesChannel){

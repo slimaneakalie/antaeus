@@ -17,6 +17,7 @@ import java.util.*
 
 class BillingProcessorTest {
     @Test
+    @kotlinx.coroutines.ExperimentalCoroutinesApi
     fun `send unpaid invoices to workers`() = runBlockingTest{
         // Mock the calendar
         val calendarMock = mockk<Calendar> {
@@ -28,8 +29,8 @@ class BillingProcessorTest {
         every { Calendar.getInstance() } returns calendarMock
 
         // Create the lists to store the input sent from the processor
-        val newCreatedInvoices: MutableList<Invoice> = mutableListOf()
-        val invoicesToProcess: MutableList<Invoice> = mutableListOf()
+        val newCreatedInvoices= mutableListOf<Invoice>()
+        val invoicesToProcess= mutableListOf<Invoice>()
         var createdBillingWorkers = 0
 
         // Create the static unpaid invoices
@@ -47,38 +48,19 @@ class BillingProcessorTest {
             }
         }
 
-
-//        val workerInputSlot = slot<BillingWorkerInput>()
-//        coEvery {
-//            billingWorker(workerInput = capture(workerInputSlot))
-//        } answers {
-//            println("createdBillingWorkers: $createdBillingWorkers")
-//            createdBillingWorkers++
-//            runBlocking{
-//                createdBillingWorkers++
-//                println("createdBillingWorkers: $createdBillingWorkers")
-//                for (invoice in workerInputSlot.captured.unpaidInvoicesChannel){
-//                    invoicesToProcess.add(invoice)
-//                    println("invoice to process: $invoice")
-//                }
-//            }
-//        }
-
-//        val workerInputSlot = slot<BillingWorkerInput>()
-//        val billingWorkerMock = mockk<BillingWorker> {
-//            every { start() } answers {
-//                createdBillingWorkers++
-//                println("createdBillingWorkers: $createdBillingWorkers")
-//            }
-//        }
-
+        val workerInputSlot = slot<BillingWorkerInput>()
         mockkConstructor(BillingWorker::class)
-
         every {
-            anyConstructed<BillingWorker>().start()
+            anyConstructed<BillingWorker>().start(workerInput = capture(workerInputSlot))
         } answers {
             createdBillingWorkers++
             println("createdBillingWorkers: $createdBillingWorkers")
+            launch{
+                for (invoice in workerInputSlot.captured.unpaidInvoicesChannel){
+                    invoicesToProcess.add(invoice)
+                    println("invoice to process: $invoice")
+                }
+            }
         }
 
 
@@ -97,6 +79,7 @@ class BillingProcessorTest {
         }
 
         println("2- createdBillingWorkers: $createdBillingWorkers")
+
     }
 
     private fun buildUnpaidInvoiceList(): List<Invoice>{
