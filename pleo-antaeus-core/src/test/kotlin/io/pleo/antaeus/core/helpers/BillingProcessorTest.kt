@@ -58,18 +58,7 @@ class BillingProcessorTest {
         val dalMock = mockDal(thisMonthUnpaidInvoices, actualNextMonthCreatedInvoices)
 
         // Mock the billing workers
-        val workerInputSlot = slot<BillingWorkerInput>()
-        mockkConstructor(BillingWorker::class)
-        every {
-            anyConstructed<BillingWorker>().start(workerInput = capture(workerInputSlot))
-        } answers {
-            actualNumberOfLaunchedWorkers++
-            launch{
-                for (invoice in workerInputSlot.captured.unpaidInvoicesChannel){
-                    actualInvoicesToProcess.put(invoice.id, invoice)
-                }
-            }
-        }
+        mockBillingWorkers(actualInvoicesToProcess){ actualNumberOfLaunchedWorkers++ }
 
         // Launch the processor
         val billingConfig = BillingConfig(
@@ -91,6 +80,21 @@ class BillingProcessorTest {
         Assertions.assertEquals(testExpectations.expectedInvoicesToProcess, actualInvoicesToProcess)
         Assertions.assertEquals(testExpectations.expectedNextMonthCreatedInvoices, actualNextMonthCreatedInvoices)
 
+    }
+
+    private fun CoroutineScope.mockBillingWorkers(actualInvoicesToProcess: MutableMap<Int, Invoice>, markWorkerCall: () -> Unit){
+        val workerInputSlot = slot<BillingWorkerInput>()
+        mockkConstructor(BillingWorker::class)
+        every {
+            anyConstructed<BillingWorker>().start(workerInput = capture(workerInputSlot))
+        } answers {
+            markWorkerCall()
+            launch{
+                for (invoice in workerInputSlot.captured.unpaidInvoicesChannel){
+                    actualInvoicesToProcess.put(invoice.id, invoice)
+                }
+            }
+        }
     }
 
     private fun mockDal(thisMonthUnpaidInvoices: List<Invoice>, actualNextMonthCreatedInvoices: MutableMap<Int, Invoice>) : AntaeusDal {
