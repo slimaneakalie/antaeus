@@ -23,7 +23,7 @@ import kotlin.math.min
 class BillingProcessorTest {
     @Test
     @kotlinx.coroutines.ExperimentalCoroutinesApi
-    fun `send unpaid invoices to workers and create the unpaid invoices of the next month`()= runBlockingTest{
+    fun `billing worker test - end of year`()= runBlockingTest{
         val testInput = BillingProcessorTestInput(
             mockedCurrentMonth = 12,
             mockedCurrentYear = 2021,
@@ -33,8 +33,20 @@ class BillingProcessorTest {
         testBillingProcessor(testInput)
     }
 
+    @Test
+    @kotlinx.coroutines.ExperimentalCoroutinesApi
+    fun `billing worker test - invoices bigger than number of workers`()= runBlockingTest{
+        val testInput = BillingProcessorTestInput(
+            mockedCurrentMonth = 5,
+            mockedCurrentYear = 2020,
+            workerPoolSize = 15,
+            numberUnpaidInvoicesThisMonth = 90,
+        )
+        testBillingProcessor(testInput)
+    }
 
-    private suspend fun CoroutineScope.testBillingProcessor(testInput: BillingProcessorTestInput){
+
+    private fun CoroutineScope.testBillingProcessor(testInput: BillingProcessorTestInput){
         // Mock the calendar
         val calendarMockInputs = listOf<CalendarMockInput>(
             CalendarMockInput(arg = Calendar.MONTH, returnValue = testInput.mockedCurrentMonth - 1),
@@ -79,7 +91,6 @@ class BillingProcessorTest {
         Assertions.assertEquals(testExpectations.expectedNumberOfLaunchedWorkers, actualNumberOfLaunchedWorkers)
         Assertions.assertEquals(testExpectations.expectedInvoicesToProcess, actualInvoicesToProcess)
         Assertions.assertEquals(testExpectations.expectedNextMonthCreatedInvoices, actualNextMonthCreatedInvoices)
-
     }
 
     private fun CoroutineScope.mockBillingWorkers(actualInvoicesToProcess: MutableMap<Int, Invoice>, markWorkerCall: () -> Unit){
