@@ -37,27 +37,27 @@ class BillingWorker () : CoroutineScope{
         job.cancel()
     }
 
-}
+    private suspend fun processInvoicePayment(
+        paymentProcessingInput: PaymentProcessingInput
+    ): Boolean{
+        val invoiceToProcess = paymentProcessingInput.invoiceToProcess
+        var i = 0
+        var invoiceIsPaid = false
+        while (!invoiceIsPaid){
+            invoiceIsPaid = paymentProcessingInput.paymentProvider.charge(invoiceToProcess)
+            if (invoiceIsPaid){
+                break
+            }
 
-suspend fun processInvoicePayment(
-    paymentProcessingInput: PaymentProcessingInput
-): Boolean{
-    val invoiceToProcess = paymentProcessingInput.invoiceToProcess
-    var i = 0
-    var invoiceIsPaid = false
-    while (!invoiceIsPaid){
-        invoiceIsPaid = paymentProcessingInput.paymentProvider.charge(invoiceToProcess)
-        if (invoiceIsPaid){
-            break
+            i++
+            if (i < paymentProcessingInput.maxNumberOfPaymentRetries){
+                delay(paymentProcessingInput.paymentRetryDelayMs)
+            } else {
+                return false
+            }
         }
 
-        i++
-        if (i < paymentProcessingInput.maxNumberOfPaymentRetries){
-            delay(paymentProcessingInput.paymentRetryDelayMs)
-        } else {
-            return false
-        }
+        return true
     }
 
-    return true
 }
