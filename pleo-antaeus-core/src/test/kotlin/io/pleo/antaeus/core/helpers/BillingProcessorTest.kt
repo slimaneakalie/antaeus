@@ -9,11 +9,12 @@ import io.pleo.antaeus.models.Currency
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.*
@@ -21,9 +22,20 @@ import kotlin.math.min
 
 
 class BillingProcessorTest {
+    @kotlinx.coroutines.ObsoleteCoroutinesApi
+    private val mainThreadSurrogate = newSingleThreadContext("Billing processor")
+
+    @BeforeEach
+    @kotlinx.coroutines.ExperimentalCoroutinesApi
+    @kotlinx.coroutines.ObsoleteCoroutinesApi
+    fun setUp(){
+        Dispatchers.setMain(mainThreadSurrogate)
+        unmockkAll()
+    }
+
     @Test
     @kotlinx.coroutines.ExperimentalCoroutinesApi
-    fun `billing worker test - end of year`()= runBlockingTest{
+    fun `billing processor test - end of year`()= runBlockingTest{
         val testInput = BillingProcessorTestInput(
             mockedCurrentMonth = 12,
             mockedCurrentYear = 2021,
@@ -35,7 +47,7 @@ class BillingProcessorTest {
 
     @Test
     @kotlinx.coroutines.ExperimentalCoroutinesApi
-    fun `billing worker test - invoices bigger than number of workers`()= runBlockingTest{
+    fun `billing processor test - invoices bigger than number of workers`()= runBlockingTest{
         val testInput = BillingProcessorTestInput(
             mockedCurrentMonth = 5,
             mockedCurrentYear = 2020,
@@ -92,6 +104,8 @@ class BillingProcessorTest {
         Assertions.assertEquals(testExpectations.expectedInvoicesToProcess, actualInvoicesToProcess)
         Assertions.assertEquals(testExpectations.expectedNextMonthCreatedInvoices, actualNextMonthCreatedInvoices)
     }
+
+
 
     private fun CoroutineScope.mockBillingWorkers(actualInvoicesToProcess: MutableMap<Int, Invoice>, markWorkerCall: () -> Unit){
         val workerInputSlot = slot<BillingWorkerInput>()
@@ -156,7 +170,7 @@ class BillingProcessorTest {
     private fun buildUnpaidInvoiceList(thisMonthUnpaidInvoicesNumber: Int): List<Invoice>{
         val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-        val unpaidInvoices: MutableList<Invoice> = mutableListOf()
+        val unpaidInvoices = mutableListOf<Invoice>()
 
         for (i in 1..thisMonthUnpaidInvoicesNumber){
             unpaidInvoices.add(Invoice(i, i, Money(BigDecimal(i*100), Currency.EUR), InvoiceStatus.PENDING, currentMonth, currentYear))

@@ -13,6 +13,11 @@ class BillingWorker (
         get() = job
 
     fun start(workerInput: BillingWorkerInput){
+        if (job.isCancelled){
+            println("Error: can't start the billing worker, the parent job is cancelled" )
+            return
+        }
+
         launch{
             for (invoice in workerInput.unpaidInvoicesChannel){
                 val paymentProcessingInput =  PaymentProcessingInput(
@@ -23,6 +28,7 @@ class BillingWorker (
                 )
 
                 val invoiceIsPaid = processInvoicePayment(paymentProcessingInput)
+
                 if (invoiceIsPaid) {
                     // TODO: handle the case where the write to db fails
                     workerInput.dal.updateInvoiceStatus(invoice.id, InvoiceStatus.PAID)
@@ -31,6 +37,8 @@ class BillingWorker (
                     println("Payment failure for invoice id: ${invoice.id} and customer id: ${invoice.customerId}, amount: ${invoice.amount.value} ${invoice.amount.currency}" )
                 }
             }
+
+            job.complete()
         }
     }
 

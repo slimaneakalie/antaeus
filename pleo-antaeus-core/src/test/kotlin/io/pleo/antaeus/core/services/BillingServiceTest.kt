@@ -6,7 +6,9 @@ import io.pleo.antaeus.core.helpers.BillingConfig
 import io.pleo.antaeus.core.helpers.BillingProcessor
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Invoice
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -19,6 +21,11 @@ import kotlin.concurrent.timerTask
 import kotlin.random.Random
 
 class BillingServiceTest {
+    @BeforeEach
+    fun setUp(){
+        unmockkAll()
+    }
+
     @Test
     fun `schedule calls to the billing processor and stop the processor on demand`(){
         // Create the billing service
