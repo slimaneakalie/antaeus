@@ -7,7 +7,7 @@ import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
 import java.math.BigDecimal
 import java.sql.Date
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 import java.util.*
 import kotlin.random.Random
@@ -51,18 +51,25 @@ internal fun getPaymentProvider(): PaymentProvider {
     }
 }
 
-fun getNextBillingDate(minDaysToBillInvoice: Int): Date {
-    val currentDateTime = LocalDateTime.now()
+fun getLastDayOfMonth(year: Int, month: Int): LocalDate{
+    val monthDate = LocalDate.of(year, month, 1)
     val temporalAdjuster = TemporalAdjusters.lastDayOfMonth()
-    var lastDayOfMonth = currentDateTime.with(temporalAdjuster)
+    return monthDate.with(temporalAdjuster)
+}
+
+fun getNextBillingDate(minDaysToBillInvoice: Int): Date {
+    val currentDate = LocalDate.now()
+    var lastDayOfMonth = getLastDayOfMonth(year = currentDate.year, month = currentDate.monthValue)
 
     // handle the case where we call this method late in the current month
     // e.g: call at 20th of june, we want the billing to start at 1st August instead of 1st July
-    if (lastDayOfMonth.dayOfMonth - currentDateTime.dayOfMonth < minDaysToBillInvoice) {
-        lastDayOfMonth = lastDayOfMonth.plusMonths(1)
+    if (lastDayOfMonth.dayOfMonth - currentDate.dayOfMonth < minDaysToBillInvoice) {
+        val nextMonth = if(currentDate.monthValue == 12) 1 else currentDate.monthValue+1
+        val year = if(currentDate.monthValue == 12) currentDate.year+1 else currentDate.year
+
+        lastDayOfMonth = getLastDayOfMonth(year = year, month = nextMonth)
     }
 
     val firstDayOfNextMonth = lastDayOfMonth.plusDays(1)
-    val firstDayOfNextMonthLocalDate = firstDayOfNextMonth.toLocalDate()
-    return Date.valueOf(firstDayOfNextMonthLocalDate)
+    return Date.valueOf(firstDayOfNextMonth)
 }
