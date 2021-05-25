@@ -51,7 +51,7 @@ internal fun getPaymentProvider(): PaymentProvider {
     }
 }
 
-internal fun getNextBillingDate(minDaysToBillInvoice: Int): Date {
+fun getNextBillingDate(minDaysToBillInvoice: Int): Date {
     val currentDateTime = LocalDateTime.now()
     val temporalAdjuster = TemporalAdjusters.lastDayOfMonth()
     var lastDayOfMonth = currentDateTime.with(temporalAdjuster)
