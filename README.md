@@ -30,7 +30,7 @@ Because we use coroutines in some parts of the flow, this won't be the real orde
 # Tests
 The following files contains the different tests I added:
 - [UtilsTest.kt](https://github.com/slimaneakalie/antaeus/blob/master/pleo-antaeus-app/src/test/kotlin/io/pleo/antaeus/app/UtilsTest.kt): for testing `getLastDayOfMonth` and `getNextBillingDate` functions,
-- [BillingServiceTest.kt](https://github.com/slimaneakalie/antaeus/blob/master/pleo-antaeus-core/src/test/kotlin/io/pleo/antaeus/core/services/BillingServiceTest.kt): to test the billing service
+- [BillingServiceTest.kt](https://github.com/slimaneakalie/antaeus/blob/master/pleo-antaeus-core/src/test/kotlin/io/pleo/antaeus/core/services/BillingServiceTest.kt): to test the billing service,
 - [BillingProcessorTest.kt](https://github.com/slimaneakalie/antaeus/blob/master/pleo-antaeus-core/src/test/kotlin/io/pleo/antaeus/core/helpers/BillingProcessorTest.kt): to test the billing processor,
 - [BillingWorkerTest.kt](https://github.com/slimaneakalie/antaeus/blob/master/pleo-antaeus-core/src/test/kotlin/io/pleo/antaeus/core/helpers/BillingWorkerTest.kt): to test the billing worker
 
@@ -44,14 +44,14 @@ My assumptions were:
 
 # How much time did it take
 It took me 3 working days:
-- The first day (Saturday) was for setting up the environment and Intellij on Ubuntu and coding some simple snippets.
-- In the second day (Sunday), I coded most of the service
+- The first day (Saturday) was for setting up the environment and Intellij on Ubuntu and coding some simple snippets,
+- In the second day (Sunday), I coded most of the service,
 - The third working day was splitted between Monday and Tuesday because I'm working full time as a Backend Engineer at Avito.ma. In this day I worked mostly on automated testing, I struggled with it for a while especially the part related to testing coroutines.
 
 # What needs to be done
-1. Handling multi instances of the service, we should think about some mechanism to prevent two workers from processing the same unpaid invoice (some sort of distributed record locking)
-2. Handle the failure of the write to the database (after charging the client or when creating an invoice of the next month). First we need to log the error, after that we can retry the write to another database instance and alert the developers to check the database. We can add the record to a dead letter queue that we check reguralry.
-3. Notify the client by email or sms where there is a payment failure. Here we can add some logic to reschedule the payment and suspend the client account if the payment keeps failing.
+1. Handling multi instances of the service, we should think about some mechanism to prevent two workers from processing the same unpaid invoice (some sort of distributed record locking),
+2. Handle the failure of the write to the database (after charging the client or when creating an invoice of the next month). First we need to log the error, after that we can retry the write to another database instance and alert the developers to check the database. We can add the record to a dead letter queue that we check reguralry,
+3. Notify the client by email or sms where there is a payment failure. Here we can add some logic to reschedule the payment and suspend the client account if the payment keeps failing
 
 ## The challenge
 
